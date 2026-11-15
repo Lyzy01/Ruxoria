@@ -32,7 +32,6 @@ router.post('/register', (req, res) => {
     const info = db.prepare('INSERT INTO users (username, email, password_hash, role, korbux, verified) VALUES (?, ?, ?, ?, ?, ?)').run(cleanUser, cleanEmail, hash, role, korbux, verified);
     const userId = info.lastInsertRowid;
 
-    // Give starter item
     const starter = db.prepare("SELECT id FROM catalog_items WHERE name = 'Starter Visor'").get();
     if (starter) db.prepare('INSERT INTO user_inventory (user_id, item_id) VALUES (?, ?)').run(userId, starter.id);
 
@@ -83,7 +82,6 @@ router.post('/stipend', authenticateToken, (req, res) => {
   res.json({ message: '+50 Ruxbux Daily Stipend claimed!', korbux: updated.korbux });
 });
 
-// Lookup another player's public inventory for trading
 router.get('/users/:username/inventory', authenticateToken, (req, res) => {
   const target = db.prepare('SELECT id, username, korbux, verified FROM users WHERE username = ? AND banned = 0').get(req.params.username.trim());
   if (!target) return res.status(404).json({ error: 'Player not found.' });
