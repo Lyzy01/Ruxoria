@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel - Rokori</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="bg-[#111216] text-white min-h-screen">
+  <header id="rokori-navbar"></header>
+  <aside id="rokori-sidebar"></aside>
+
+  <main class="pt-20 pb-20 px-4 sm:px-8 lg:ml-56 max-w-[1600px]">
+    <h1 class="text-2xl font-black mb-6">🛡️ Economy & Staff Panel</h1>
+    <div id="admin-stats" class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6"></div>
+
+    <div class="bg-[#232527] border border-[#2B2D31] rounded-2xl p-5 mb-6">
+      <h2 class="text-base font-black mb-3">Broadcast System Banner</h2>
+      <form id="ann-form" class="flex gap-2">
+        <input id="ann-input" type="text" placeholder="Global announcement..." class="flex-1 bg-[#111216] border border-[#2B2D31] rounded-xl px-3.5 py-2 text-sm text-white" />
+        <button class="bg-amber-500 text-black font-black px-5 py-2 rounded-xl text-sm">Broadcast</button>
+      </form>
+    </div>
+
+    <div class="bg-[#232527] border border-[#2B2D31] rounded-2xl p-5">
+      <h2 class="text-base font-black mb-3">Player Balances</h2>
+      <div id="users-table" class="space-y-2 text-xs"></div>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    async function loadAdmin() {
+      const res = await Rokori.api('/api/admin/overview');
+      document.getElementById('admin-stats').innerHTML = `
+        <div class="bg-[#232527] p-4 rounded-xl"><div class="text-xs text-[#BDBEBE]">Players</div><div class="text-xl font-black">${res.stats.userCount}</div></div>
+        <div class="bg-[#232527] p-4 rounded-xl"><div class="text-xs text-[#BDBEBE]">UGC Items</div><div class="text-xl font-black">${res.stats.itemCount}</div></div>
+        <div class="bg-[#232527] p-4 rounded-xl"><div class="text-xs text-[#BDBEBE]">Completed Trades</div><div class="text-xl font-black">${res.stats.tradeCount}</div></div>
+        <div class="bg-[#232527] p-4 rounded-xl"><div class="text-xs text-[#BDBEBE]">Total Ruxbux</div><div class="text-xl font-black text-[#00B06F]">${res.stats.totalEconomy.toLocaleString()}</div></div>
+      `;
+      document.getElementById('users-table').innerHTML = res.users.map(u => `
+        <div class="flex items-center justify-between bg-[#111216] p-3 rounded-xl">
+          <div><span class="font-bold">${Rokori.escapeHtml(u.username)}</span> (${u.role}) — <span class="text-[#00B06F] font-bold">${u.korbux.toLocaleString()} Ruxbux</span></div>
+          <button onclick="grantRuxbux(${u.id})" class="bg-[#00B06F] text-white font-bold px-3 py-1 rounded-lg">+1,000 R</button>
+        </div>
+      `).join('');
+    }
+
+    async function grantRuxbux(id) {
+      await Rokori.api(`/api/admin/users/${id}/korbux`, { method: 'POST', body: JSON.stringify({ amount: 1000 }) });
+      Rokori.toast('Granted +1,000 Ruxbux!');
+      loadAdmin();
+    }
+
+    document.getElementById('ann-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = document.getElementById('ann-input').value.trim();
+      if (!msg) return;
+      await Rokori.api('/api/admin/announce', { method: 'POST', body: JSON.stringify({ message: msg }) });
+      Rokori.toast('Broadcast sent!');
+    });
+
+    (async () => {
+      await Rokori.initShell('admin');
+      if (!Rokori.user || !['MODERATOR', 'ADMIN', 'OWNER'].includes(Rokori.user.role)) {
+        window.location.href = '/index.html'; return;
+      }
+      loadAdmin();
+    })();
+  </script>
+</body>
+</html>
