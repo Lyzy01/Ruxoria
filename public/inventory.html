@@ -43,7 +43,7 @@
       grid.innerHTML = res.items.map(item => `
         <div class="bg-[#232527] border border-[#2B2D31] rounded-2xl p-4 flex flex-col justify-between">
           <div>
-            <div class="aspect-square bg-[#111216] rounded-xl flex items-center justify-center text-5xl mb-3">${item.icon || '🎩'}</div>
+            <div class="aspect-square bg-[#111216] rounded-xl flex items-center justify-center mb-3">${Rokori.renderSvgIcon(item.icon)}</div>
             <div class="text-sm font-bold truncate">${Rokori.escapeHtml(item.name)}</div>
             <div class="text-xs text-amber-400 font-bold mt-0.5">RAP: ${(item.rap || item.price).toLocaleString()} R</div>
           </div>
