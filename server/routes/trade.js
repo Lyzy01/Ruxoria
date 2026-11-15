@@ -4,7 +4,6 @@ const { authenticateToken } = require('../middleware');
 
 const router = express.Router();
 
-// Get all pending incoming & outgoing trades with full item details
 router.get('/', authenticateToken, (req, res) => {
   const trades = db.prepare(`
     SELECT t.*, u.username as sender_name, r.username as receiver_name
@@ -34,7 +33,6 @@ router.get('/', authenticateToken, (req, res) => {
   res.json({ trades: hydrated });
 });
 
-// Send a two-sided P2P Trade Offer (Items + Ruxbux)
 router.post('/propose', authenticateToken, (req, res) => {
   const { receiverUsername, senderInventoryIds, receiverInventoryIds, senderRuxbux, receiverRuxbux } = req.body;
   if (!receiverUsername) return res.status(400).json({ error: 'Recipient username required.' });
@@ -90,7 +88,6 @@ router.post('/propose', authenticateToken, (req, res) => {
   }
 });
 
-// Accept an incoming P2P trade offer (atomic item & Ruxbux swap)
 router.post('/:id/accept', authenticateToken, (req, res) => {
   const tradeId = Number(req.params.id);
   const trade = db.prepare("SELECT * FROM trade_offers WHERE id = ? AND receiver_id = ? AND status = 'pending'").get(tradeId, req.user.id);
@@ -106,19 +103,16 @@ router.post('/:id/accept', authenticateToken, (req, res) => {
 
   try {
     db.transaction(() => {
-      // Verify all items are still owned by their respective traders
       for (const ti of tradeItems) {
         const check = db.prepare('SELECT id FROM user_inventory WHERE id = ? AND user_id = ?').get(ti.inventory_id, ti.user_id);
         if (!check) throw new Error('One or more items in this trade were already traded or sold.');
       }
 
-      // Swap item ownership and clear any active resale prices
       for (const ti of tradeItems) {
         const newOwnerId = ti.user_id === trade.sender_id ? trade.receiver_id : trade.sender_id;
         db.prepare('UPDATE user_inventory SET user_id = ?, resale_price = NULL WHERE id = ?').run(newOwnerId, ti.inventory_id);
       }
 
-      // Swap Ruxbux
       if (trade.sender_ruxbux > 0) {
         db.prepare('UPDATE users SET korbux = korbux - ? WHERE id = ?').run(trade.sender_ruxbux, trade.sender_id);
         db.prepare('UPDATE users SET korbux = korbux + ? WHERE id = ?').run(trade.sender_ruxbux, trade.receiver_id);
@@ -138,7 +132,6 @@ router.post('/:id/accept', authenticateToken, (req, res) => {
   }
 });
 
-// Decline or cancel a trade offer
 router.post('/:id/cancel', authenticateToken, (req, res) => {
   const tradeId = Number(req.params.id);
   db.prepare("UPDATE trade_offers SET status = 'cancelled' WHERE id = ? AND (sender_id = ? OR receiver_id = ?)").run(tradeId, req.user.id, req.user.id);
