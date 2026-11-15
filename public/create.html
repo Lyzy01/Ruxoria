@@ -38,8 +38,16 @@
           </select>
         </div>
         <div>
-          <label class="block text-xs font-bold text-[#BDBEBE] uppercase mb-1">Icon Emoji</label>
-          <input id="u-icon" type="text" value="👑" class="w-full bg-[#111216] border border-[#2B2D31] rounded-xl px-3.5 py-2.5 text-sm text-white text-center" />
+          <label class="block text-xs font-bold text-[#BDBEBE] uppercase mb-1">Icon Style</label>
+          <select id="u-icon" class="w-full bg-[#111216] border border-[#2B2D31] rounded-xl px-3 py-2.5 text-sm text-white">
+            <option value="dominus">Dominus</option>
+            <option value="valkyrie">Valkyrie</option>
+            <option value="headphones">Headphones</option>
+            <option value="horns">Horns</option>
+            <option value="fedora">Fedora</option>
+            <option value="coil">Coil</option>
+            <option value="sword">Sword</option>
+          </select>
         </div>
       </div>
       <div>
@@ -67,7 +75,7 @@
             name: document.getElementById('u-name').value.trim(),
             description: document.getElementById('u-desc').value.trim(),
             category: document.getElementById('u-cat').value,
-            icon: document.getElementById('u-icon').value.trim() || '🎩',
+            icon: document.getElementById('u-icon').value,
             price: Number(document.getElementById('u-price').value) || 0,
             is_limited: document.getElementById('u-limited').checked
           })
