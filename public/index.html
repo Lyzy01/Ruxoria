@@ -24,7 +24,6 @@
       </div>
     </div>
 
-    <!-- Filters & Search -->
     <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
       <div class="flex gap-2 overflow-x-auto pb-1">
         <button data-cat="All" class="cat-pill px-4 py-1.5 rounded-full text-xs font-bold bg-white text-black">All</button>
@@ -58,8 +57,8 @@
       grid.innerHTML = (res.items || []).map(item => `
         <div class="bg-[#232527] border border-[#2B2D31] hover:border-white/20 rounded-2xl p-4 flex flex-col justify-between transition">
           <div>
-            <div class="relative aspect-square bg-[#111216] rounded-xl flex items-center justify-center text-5xl mb-3">
-              ${item.icon || '🎩'}
+            <div class="relative aspect-square bg-[#111216] rounded-xl flex items-center justify-center mb-3">
+              ${Rokori.renderSvgIcon(item.icon)}
               ${item.is_limited ? `<span class="absolute top-2 left-2 bg-amber-500 text-black text-[10px] font-black px-2 py-0.5 rounded uppercase">Limited</span>` : ''}
             </div>
             <div class="text-sm font-bold truncate">${Rokori.escapeHtml(item.name)}</div>
@@ -73,7 +72,7 @@
               <button onclick="buyPrimary(${item.id})" class="bg-[#00B06F] hover:bg-[#009960] text-white text-xs font-bold px-3 py-1 rounded-lg">Buy</button>
             </div>
             ${item.lowest_resale ? `
-              <button onclick="buyResale(${item.lowest_resale.inventory_id})" class="w-full bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-[11px] font-bold py-1.5 rounded-lg">
+              <button onclick="buyResale(${item.lowest_resale.inventory_id})" class="w-full bg-amber-500/25 hover:bg-amber-500/40 border border-amber-500/40 text-amber-300 text-[11px] font-bold py-1.5 rounded-lg truncate">
                 Resale: ${item.lowest_resale.resale_price.toLocaleString()} R (${Rokori.escapeHtml(item.lowest_resale.seller_name)})
               </button>
             ` : ''}
@@ -90,6 +89,7 @@
         Rokori.setSession(Rokori.token, Rokori.user);
         document.getElementById('nav-korbux-count').textContent = res.korbux.toLocaleString();
         Rokori.toast(res.message);
+        loadCatalog();
       } catch (err) { Rokori.toast(err.message, 'error'); }
     }
 
