@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>P2P Trade Hub - Rokori</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="bg-[#111216] text-white min-h-screen">
+  <header id="rokori-navbar"></header>
+  <aside id="rokori-sidebar"></aside>
+
+  <main class="pt-20 pb-20 px-4 sm:px-8 lg:ml-56 max-w-[1600px]">
+    <div class="mb-6">
+      <h1 class="text-2xl sm:text-3xl font-black">🤝 P2P Trading Hub</h1>
+      <p class="text-sm text-[#BDBEBE]">Select items and Ruxbux sweeteners from both inventories to send live trades.</p>
+    </div>
+
+    <!-- Trade Builder -->
+    <div class="bg-[#232527] border border-[#2B2D31] rounded-2xl p-5 mb-8">
+      <div class="flex flex-col sm:flex-row gap-3 mb-5 pb-4 border-b border-[#2B2D31]">
+        <input id="partner-username" type="text" placeholder="Enter partner's username to load their items..." class="flex-1 bg-[#111216] border border-[#2B2D31] rounded-xl px-4 py-2.5 text-sm text-white outline-none" />
+        <button onclick="loadPartnerInventory()" class="bg-[#00B06F] hover:bg-[#009960] text-white font-bold px-5 py-2.5 rounded-xl text-sm">Load Partner</button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Your Offer -->
+        <div class="bg-[#111216] border border-[#2B2D31] rounded-xl p-4">
+          <div class="flex justify-between items-center mb-3">
+            <h3 class="font-black text-sm text-[#00B06F]">YOUR OFFER</h3>
+            <span id="my-offer-rap" class="text-xs font-bold text-amber-400">RAP: 0 R</span>
+          </div>
+          <div id="my-trade-items" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-60 overflow-y-auto mb-3">
+            <div class="text-xs text-[#BDBEBE] col-span-full py-4 text-center">Log in to load your items.</div>
+          </div>
+          <div class="flex items-center gap-2 pt-2 border-t border-[#2B2D31]">
+            <span class="text-xs font-bold text-[#BDBEBE]">Add Ruxbux:</span>
+            <input id="sender-ruxbux" type="number" min="0" value="0" class="w-28 bg-[#232527] border border-[#2B2D31] rounded-lg px-2.5 py-1 text-xs text-white" />
+          </div>
+        </div>
+
+        <!-- Partner Offer -->
+        <div class="bg-[#111216] border border-[#2B2D31] rounded-xl p-4">
+          <div class="flex justify-between items-center mb-3">
+            <h3 id="partner-title" class="font-black text-sm text-blue-400">PARTNER'S ITEMS</h3>
+            <span id="partner-offer-rap" class="text-xs font-bold text-amber-400">RAP: 0 R</span>
+          </div>
+          <div id="partner-trade-items" class="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-60 overflow-y-auto mb-3">
+            <div class="text-xs text-[#BDBEBE] col-span-full py-4 text-center">Search a player above to view their tradeable items.</div>
+          </div>
+          <div class="flex items-center gap-2 pt-2 border-t border-[#2B2D31]">
+            <span class="text-xs font-bold text-[#BDBEBE]">Request Ruxbux:</span>
+            <input id="receiver-ruxbux" type="number" min="0" value="0" class="w-28 bg-[#232527] border border-[#2B2D31] rounded-lg px-2.5 py-1 text-xs text-white" />
+          </div>
+        </div>
+      </div>
+
+      <button onclick="submitTrade()" class="w-full mt-5 bg-[#00B06F] hover:bg-[#009960] text-white font-black py-3 rounded-xl shadow-lg transition">
+        Send Trade Offer
+      </button>
+    </div>
+
+    <!-- Active Pending Trades -->
+    <div class="bg-[#232527] border border-[#2B2D31] rounded-2xl p-5">
+      <h2 class="text-lg font-black mb-4">Active Trade Requests</h2>
+      <div id="active-trades-list" class="space-y-3"></div>
+    </div>
+  </main>
+
+  <script src="/js/api.js"></script>
+  <script>
+    let myItems = [];
+    let partnerItems = [];
+    let selectedMyIds = new Set();
+    let selectedPartnerIds = new Set();
+    let loadedPartnerName = '';
+
+    async function loadMyInventory() {
+      if (!Rokori.user) return;
+      const res = await Rokori.api('/api/catalog/inventory/me');
+      myItems = res.items || [];
+      renderItemGrid('my-trade-items', myItems, selectedMyIds, true);
+    }
+
+    async function loadPartnerInventory() {
+      if (!Rokori.user) return Rokori.openAuthModal('login');
+      const username = document.getElementById('partner-username').value.trim();
+      if (!username) return;
+      try {
+        const res = await Rokori.api(`/api/auth/users/${encodeURIComponent(username)}/inventory`);
+        loadedPartnerName = res.user.username;
+        partnerItems = res.items || [];
+        selectedPartnerIds.clear();
+        document.getElementById('partner-title').textContent = `${loadedPartnerName.toUpperCase()}'S ITEMS`;
+        renderItemGrid('partner-trade-items', partnerItems, selectedPartnerIds, false);
+      } catch (err) { Rokori.toast(err.message, 'error'); }
+    }
+
+    function renderItemGrid(containerId, items, selectedSet, isMine) {
+      const container = document.getElementById(containerId);
+      if (items.length === 0) {
+        container.innerHTML = '<div class="text-xs text-[#BDBEBE] col-span-full py-4 text-center">No items found.</div>';
+        return;
+      }
+      container.innerHTML = items.map(item => {
+        const active = selectedSet.has(item.inventory_id);
+        return `
+          <div onclick="toggleTradeSelect(${item.inventory_id}, ${isMine})" class="cursor-pointer p-2.5 rounded-xl border transition ${active ? 'bg-[#00B06F]/20 border-[#00B06F]' : 'bg-[#232527] border-[#2B2D31] hover:border-white/20'}">
+            <div class="text-2xl mb-1">${item.icon || '🎩'}</div>
+            <div class="text-xs font-bold truncate">${Rokori.escapeHtml(item.name)}</div>
+            <div class="text-[10px] text-amber-400 font-semibold">RAP: ${(item.rap || item.price).toLocaleString()}</div>
+          </div>
+        `;
+      }).join('');
+      updateRapTotals();
+    }
+
+    function toggleTradeSelect(invId, isMine) {
+      const set = isMine ? selectedMyIds : selectedPartnerIds;
+      if (set.has(invId)) set.delete(invId); else set.add(invId);
+      renderItemGrid(isMine ? 'my-trade-items' : 'partner-trade-items', isMine ? myItems : partnerItems, set, isMine);
+    }
+
+    function updateRapTotals() {
+      const myRap = myItems.filter(i => selectedMyIds.has(i.inventory_id)).reduce((s, i) => s + (i.rap || i.price), 0);
+      const pRap = partnerItems.filter(i => selectedPartnerIds.has(i.inventory_id)).reduce((s, i) => s + (i.rap || i.price), 0);
+      document.getElementById('my-offer-rap').textContent = `RAP: ${myRap.toLocaleString()} R`;
+      document.getElementById('partner-offer-rap').textContent = `RAP: ${pRap.toLocaleString()} R`;
+    }
+
+    async function submitTrade() {
+      if (!Rokori.user) return Rokori.openAuthModal('login');
+      if (!loadedPartnerName) return Rokori.toast('Load a trading partner first.', 'error');
+      try {
+        const res = await Rokori.api('/api/trade/propose', {
+          method: 'POST',
+          body: JSON.stringify({
+            receiverUsername: loadedPartnerName,
+            senderInventoryIds: Array.from(selectedMyIds),
+            receiverInventoryIds: Array.from(selectedPartnerIds),
+            senderRuxbux: Number(document.getElementById('sender-ruxbux').value) || 0,
+            receiverRuxbux: Number(document.getElementById('receiver-ruxbux').value) || 0
+          })
+        });
+        Rokori.toast(res.message);
+        selectedMyIds.clear(); selectedPartnerIds.clear();
+        loadMyInventory(); loadTrades();
+      } catch (err) { Rokori.toast(err.message, 'error'); }
+    }
+
+    async function loadTrades() {
+      if (!Rokori.user) return;
+      const res = await Rokori.api('/api/trade');
+      const list = document.getElementById('active-trades-list');
+      if (!res.trades || res.trades.length === 0) {
+        list.innerHTML = '<div class="text-xs text-[#BDBEBE] text-center py-6">No pending trade offers.</div>';
+        return;
+      }
+      list.innerHTML = res.trades.map(t => {
+        const isIncoming = t.receiver_id === Rokori.user.id;
+        return `
+          <div class="bg-[#111216] border border-[#2B2D31] rounded-xl p-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div class="text-sm font-black">
+                ${isIncoming ? `📥 Incoming from <span class="text-[#00B06F]">${Rokori.escapeHtml(t.sender_name)}</span>` : `📤 Outgoing to <span class="text-blue-400">${Rokori.escapeHtml(t.receiver_name)}</span>`}
+              </div>
+              <div class="flex gap-2">
+                ${isIncoming ? `<button onclick="acceptTrade(${t.id})" class="bg-[#00B06F] hover:bg-[#009960] text-xs font-bold px-3.5 py-1.5 rounded-lg">Accept Trade</button>` : ''}
+                <button onclick="cancelTrade(${t.id})" class="bg-red-600/80 hover:bg-red-600 text-xs font-bold px-3.5 py-1.5 rounded-lg">${isIncoming ? 'Decline' : 'Cancel'}</button>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div class="bg-[#191B1D] p-2.5 rounded-lg">
+                <div class="font-bold text-[#BDBEBE] mb-1">${Rokori.escapeHtml(t.sender_name)} Offers:</div>
+                <div>${t.sender_items.map(i => `${i.icon} ${Rokori.escapeHtml(i.name)}`).join(', ') || 'No items'}</div>
+                ${t.sender_ruxbux > 0 ? `<div class="text-[#00B06F] font-bold mt-1">+ ${t.sender_ruxbux.toLocaleString()} Ruxbux</div>` : ''}
+              </div>
+              <div class="bg-[#191B1D] p-2.5 rounded-lg">
+                <div class="font-bold text-[#BDBEBE] mb-1">${Rokori.escapeHtml(t.receiver_name)} Gives:</div>
+                <div>${t.receiver_items.map(i => `${i.icon} ${Rokori.escapeHtml(i.name)}`).join(', ') || 'No items'}</div>
+                ${t.receiver_ruxbux > 0 ? `<div class="text-[#00B06F] font-bold mt-1">+ ${t.receiver_ruxbux.toLocaleString()} Ruxbux</div>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function acceptTrade(id) {
+      try {
+        const res = await Rokori.api(`/api/trade/${id}/accept`, { method: 'POST' });
+        Rokori.user.korbux = res.korbux;
+        Rokori.setSession(Rokori.token, Rokori.user);
+        document.getElementById('nav-korbux-count').textContent = res.korbux.toLocaleString();
+        Rokori.toast(res.message);
+        loadMyInventory(); loadTrades();
+      } catch (err) { Rokori.toast(err.message, 'error'); }
+    }
+
+    async function cancelTrade(id) {
+      try {
+        const res = await Rokori.api(`/api/trade/${id}/cancel`, { method: 'POST' });
+        Rokori.toast(res.message, 'info');
+        loadTrades();
+      } catch (err) { Rokori.toast(err.message, 'error'); }
+    }
+
+    (async () => {
+      await Rokori.initShell('trade');
+      await loadMyInventory();
+      await loadTrades();
+    })();
+  </script>
+</body>
+</html>
