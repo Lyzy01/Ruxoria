@@ -31,7 +31,7 @@ function initDatabase() {
       name TEXT NOT NULL,
       description TEXT,
       category TEXT NOT NULL,
-      icon TEXT DEFAULT '🎩',
+      icon TEXT DEFAULT 'fedora',
       price INTEGER DEFAULT 0,
       rap INTEGER DEFAULT 0,
       creator_id INTEGER,
@@ -86,16 +86,16 @@ function initDatabase() {
 
 function seedCatalog() {
   const items = [
-    { name: 'Dominus Empyreus', description: 'Legendary celestial hood coveted by top traders.', category: 'Hats', icon: '👑', price: 50000, rap: 54000, is_limited: 1, is_featured: 1 },
-    { name: 'Valkyrie Helm', description: 'Winged silver helm forged for elite collectors.', category: 'Hats', icon: '🪽', price: 25000, rap: 26500, is_limited: 1, is_featured: 1 },
-    { name: 'Clockwork Headphones', description: 'Precision brass gears and ticking audio.', category: 'Accessories', icon: '🎧', price: 4500, rap: 4800, is_limited: 1, is_featured: 1 },
-    { name: 'Black Iron Branches', description: 'Dark enchanted horns forged in shadow.', category: 'Hats', icon: '🌿', price: 1800, rap: 1950, is_limited: 1, is_featured: 1 },
-    { name: 'Sparkle Time Fedora', description: 'Shimmering limited-edition classic fedora.', category: 'Hats', icon: '🎩', price: 12000, rap: 13200, is_limited: 1, is_featured: 1 },
-    { name: 'Epic Face', description: 'The unmistakable grin of trading dominance.', category: 'Faces', icon: '😎', price: 350, rap: 350, is_limited: 0, is_featured: 1 },
-    { name: 'Stitchface', description: 'Rare stitched expression for spooky avatars.', category: 'Faces', icon: '🤐', price: 1200, rap: 1200, is_limited: 0, is_featured: 0 },
-    { name: 'Gravity Coil', description: 'Classic blue energy coil accessory.', category: 'Gears', icon: '🌀', price: 600, rap: 600, is_limited: 0, is_featured: 0 },
-    { name: 'Linked Sword', description: 'Iconic steel blade from the classic era.', category: 'Gears', icon: '⚔️', price: 450, rap: 450, is_limited: 0, is_featured: 0 },
-    { name: 'Starter Visor', description: 'Clean everyday visor for new traders.', category: 'Hats', icon: '🧢', price: 50, rap: 50, is_limited: 0, is_featured: 0 }
+    { name: 'Dominus Empyreus', description: 'Legendary celestial hood coveted by top traders.', category: 'Hats', icon: 'dominus', price: 50000, rap: 54000, is_limited: 1, is_featured: 1 },
+    { name: 'Valkyrie Helm', description: 'Winged silver helm forged for elite collectors.', category: 'Hats', icon: 'valkyrie', price: 25000, rap: 26500, is_limited: 1, is_featured: 1 },
+    { name: 'Clockwork Headphones', description: 'Precision brass gears and ticking audio.', category: 'Accessories', icon: 'headphones', price: 4500, rap: 4800, is_limited: 1, is_featured: 1 },
+    { name: 'Black Iron Branches', description: 'Dark enchanted horns forged in shadow.', category: 'Hats', icon: 'horns', price: 1800, rap: 1950, is_limited: 1, is_featured: 1 },
+    { name: 'Sparkle Time Fedora', description: 'Shimmering limited-edition classic fedora.', category: 'Hats', icon: 'fedora', price: 12000, rap: 13200, is_limited: 1, is_featured: 1 },
+    { name: 'Epic Face', description: 'The unmistakable grin of trading dominance.', category: 'Faces', icon: 'face_epic', price: 350, rap: 350, is_limited: 0, is_featured: 1 },
+    { name: 'Stitchface', description: 'Rare stitched expression for spooky avatars.', category: 'Faces', icon: 'face_stitch', price: 1200, rap: 1200, is_limited: 0, is_featured: 0 },
+    { name: 'Gravity Coil', description: 'Classic blue energy coil accessory.', category: 'Gears', icon: 'coil', price: 600, rap: 600, is_limited: 0, is_featured: 0 },
+    { name: 'Linked Sword', description: 'Iconic steel blade from the classic era.', category: 'Gears', icon: 'sword', price: 450, rap: 450, is_limited: 0, is_featured: 0 },
+    { name: 'Starter Visor', description: 'Clean everyday visor for new traders.', category: 'Hats', icon: 'visor', price: 50, rap: 50, is_limited: 0, is_featured: 0 }
   ];
 
   const insert = db.prepare(`
