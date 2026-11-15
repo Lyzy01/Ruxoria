@@ -48,6 +48,22 @@ const Rokori = {
     return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   },
 
+  renderSvgIcon(iconKey) {
+    const icons = {
+      dominus: `<svg viewBox="0 0 64 64" class="w-16 h-16 drop-shadow-lg"><path d="M12 28L32 12L52 28V44C52 50 32 54 32 54C32 54 12 50 12 44V28Z" fill="#0284C7" stroke="#38BDF8" stroke-width="3"/><path d="M22 28L32 18L42 28V38C42 43 32 46 32 46C32 46 22 43 22 38V28Z" fill="#38BDF8"/><circle cx="32" cy="32" r="5" fill="#FFFFFF"/></svg>`,
+      valkyrie: `<svg viewBox="0 0 64 64" class="w-16 h-16 drop-shadow-lg"><path d="M8 20L24 16L32 26L40 16L56 20C56 36 44 48 32 50C20 48 8 36 8 20Z" fill="#94A3B8" stroke="#CBD5E1" stroke-width="2"/><path d="M4 14C12 12 22 18 24 24L16 28L4 14Z" fill="#E2E8F0"/><path d="M60 14C52 12 42 18 40 24L48 28L60 14Z" fill="#E2E8F0"/></svg>`,
+      headphones: `<svg viewBox="0 0 64 64" class="w-16 h-16 drop-shadow-lg"><path d="M16 34V24C16 15.163 23.163 8 32 8C40.837 8 48 15.163 48 24V34" fill="none" stroke="#F59E0B" stroke-width="5" stroke-linecap="round"/><rect x="12" y="30" width="8" height="16" rx="4" fill="#D97706"/><rect x="44" y="30" width="8" height="16" rx="4" fill="#D97706"/></svg>`,
+      horns: `<svg viewBox="0 0 64 64" class="w-16 h-16 drop-shadow-lg"><path d="M20 42C12 36 10 24 14 16C18 24 24 32 30 38L20 42Z" fill="#1E293B" stroke="#475569" stroke-width="2"/><path d="M44 42C52 36 54 24 50 16C46 24 40 32 34 38L44 42Z" fill="#1E293B" stroke="#475569" stroke-width="2"/><circle cx="32" cy="36" r="8" fill="#0F172A" stroke="#334155" stroke-width="2"/></svg>`,
+      fedora: `<svg viewBox="0 0 64 64" class="w-16 h-16 drop-shadow-lg"><ellipse cx="32" cy="42" rx="26" ry="8" fill="#334155" stroke="#64748B" stroke-width="2"/><path d="M18 38C18 24 22 16 32 16C42 16 46 24 46 38H18Z" fill="#1E293B"/><rect x="18" y="34" width="28" height="5" fill="#EAB308"/></svg>`,
+      face_epic: `<svg viewBox="0 0 64 64" class="w-16 h-16 drop-shadow-lg"><circle cx="32" cy="32" r="26" fill="#FACC15" stroke="#CA8A04" stroke-width="3"/><path d="M20 24L28 28M44 24L36 28" stroke="#1E293B" stroke-width="4" stroke-linecap="round"/><path d="M20 40C24 46 40 46 44 40" fill="none" stroke="#1E293B" stroke-width="4" stroke-linecap="round"/></svg>`,
+      face_stitch: `<svg viewBox="0 0 64 64" class="w-16 h-16 drop-shadow-lg"><circle cx="32" cy="32" r="26" fill="#94A3B8" stroke="#64748B" stroke-width="3"/><circle cx="22" cy="26" r="4" fill="#1E293B"/><circle cx="42" cy="26" r="4" fill="#1E293B"/><path d="M22 42H42M28 38V46M36 38V46" stroke="#1E293B" stroke-width="3" stroke-linecap="round"/></svg>`,
+      coil: `<svg viewBox="0 0 64 64" class="w-16 h-16 drop-shadow-lg"><ellipse cx="32" cy="20" rx="16" ry="6" fill="none" stroke="#38BDF8" stroke-width="5"/><ellipse cx="32" cy="32" rx="16" ry="6" fill="none" stroke="#0EA5E9" stroke-width="5"/><ellipse cx="32" cy="44" rx="16" ry="6" fill="none" stroke="#0284C7" stroke-width="5"/></svg>`,
+      sword: `<svg viewBox="0 0 64 64" class="w-16 h-16 drop-shadow-lg"><path d="M14 50L50 14" stroke="#94A3B8" stroke-width="6" stroke-linecap="round"/><path d="M12 52L20 44" stroke="#D97706" stroke-width="6" stroke-linecap="round"/><rect x="38" y="8" width="6" height="6" transform="rotate(45 41 11)" fill="#38BDF8"/></svg>`,
+      visor: `<svg viewBox="0 0 64 64" class="w-16 h-16 drop-shadow-lg"><path d="M14 28C14 24 20 20 32 20C44 20 50 24 50 28V36C50 40 44 42 32 42C20 42 14 40 14 36V28Z" fill="#3B82F6" stroke="#60A5FA" stroke-width="3"/></svg>`
+    };
+    return icons[iconKey] || icons['fedora'];
+  },
+
   initSocket() {
     if (typeof io === 'undefined') return;
     this.socket = io({ auth: { token: this.token } });
